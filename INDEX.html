@@ -122,7 +122,7 @@ tbody tr:hover{background:var(--bg2)}
 .deal-toggle{display:flex;background:var(--bg2);border-radius:var(--radius);padding:3px;gap:3px;border:1px solid var(--border)}
 .deal-type-btn{flex:1;padding:8px 20px;border-radius:8px;border:none;font-size:13px;font-weight:600;cursor:pointer;transition:all 0.15s;background:transparent;color:var(--text2)}
 .deal-type-btn.active{background:var(--bg);color:var(--text);box-shadow:0 1px 4px rgba(0,0,0,0.1)}
-.deal-card{background:var(--bg);border:0.5px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;margin-bottom:12px}
+.deal-card{background:var(--bg);border:0.5px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;margin-bottom:12px}.deal-card-row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;align-items:start;margin-bottom:12px}.deal-card-row>.deal-card{margin-bottom:0}
 .deal-card-hdr{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:0.5px solid var(--border)}
 .deal-card-title{font-size:14px;font-weight:600;display:flex;align-items:center;gap:8px}
 .deal-sec-btn{background:transparent;border:none;cursor:pointer;display:flex;align-items:center;gap:6px;font-size:14px;font-weight:600;color:var(--text);padding:0}
@@ -236,6 +236,58 @@ async function loadDealsFromCloud() {
 <script src="https://maps.googleapis.com/maps/api/js?key={{ google_key }}&libraries=places&callback=initAddressAutocomplete" async defer></script>
 </head>
 <body>
+
+<!-- START DEAL MODAL -->
+<div class="modal-overlay" id="start-deal-modal" style="display:none">
+  <div class="modal-box" style="max-width:480px;width:90%">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
+      <div style="font-size:16px;font-weight:600">Start a deal</div>
+      <button onclick="closeStartDealModal()" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--text2)">✕</button>
+    </div>
+    <div id="start-deal-step-1">
+      <div style="font-size:13px;color:var(--text2);margin-bottom:16px">Select deal type</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:24px">
+        <button onclick="selectDealTypeNew('cash')" style="padding:20px 10px;border-radius:var(--radius-lg);border:2px solid var(--border);background:var(--bg);cursor:pointer;font-family:inherit;transition:all 0.15s" id="dt-new-cash">
+          <div style="font-size:24px;margin-bottom:8px">💵</div>
+          <div style="font-size:13px;font-weight:600;color:var(--text)">Cash</div>
+        </button>
+        <button onclick="selectDealTypeNew('finance')" style="padding:20px 10px;border-radius:var(--radius-lg);border:2px solid var(--border);background:var(--bg);cursor:pointer;font-family:inherit;transition:all 0.15s" id="dt-new-finance">
+          <div style="font-size:24px;margin-bottom:8px">🏦</div>
+          <div style="font-size:13px;font-weight:600;color:var(--text)">Finance</div>
+        </button>
+        <button onclick="selectDealTypeNew('wholesale')" style="padding:20px 10px;border-radius:var(--radius-lg);border:2px solid var(--border);background:var(--bg);cursor:pointer;font-family:inherit;transition:all 0.15s" id="dt-new-wholesale">
+          <div style="font-size:24px;margin-bottom:8px">🤝</div>
+          <div style="font-size:13px;font-weight:600;color:var(--text)">Wholesale</div>
+        </button>
+      </div>
+    </div>
+    <div id="start-deal-step-2" style="display:none">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px">
+        <button onclick="backToStep1()" style="background:none;border:none;cursor:pointer;color:var(--text2);font-size:13px;padding:0">← Back</button>
+        <div style="font-size:13px;color:var(--text2)">Customer information</div>
+        <span id="new-deal-type-badge" style="font-size:11px;font-weight:600;padding:2px 8px;border-radius:20px;background:var(--bg2);color:var(--text2)"></span>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+        <div class="form-field"><label>First name *</label><input type="text" id="nd-first" placeholder="First name" /></div>
+        <div class="form-field"><label>Last name *</label><input type="text" id="nd-last" placeholder="Last name" /></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+        <div class="form-field"><label>Phone</label><input type="tel" id="nd-phone" placeholder="(555) 555-5555" /></div>
+        <div class="form-field"><label>Email</label><input type="email" id="nd-email" placeholder="email@example.com" /></div>
+      </div>
+      <div style="margin-bottom:10px">
+        <div class="form-field"><label>Address</label><input type="text" id="nd-addr" placeholder="Start typing address..." autocomplete="off" /></div>
+      </div>
+      <div style="display:grid;grid-template-columns:2fr 1fr 1fr;gap:10px;margin-bottom:20px">
+        <div class="form-field"><label>City</label><input type="text" id="nd-city" /></div>
+        <div class="form-field"><label>State</label><input type="text" id="nd-state" /></div>
+        <div class="form-field"><label>ZIP</label><input type="text" id="nd-zip" /></div>
+      </div>
+      <div id="nd-error" style="display:none;color:var(--danger);font-size:12px;margin-bottom:10px">Please enter at least a first or last name.</div>
+      <button onclick="goToDeal()" style="width:100%;padding:12px;background:#378ADD;color:#fff;border:none;border-radius:var(--radius);font-size:14px;font-weight:600;cursor:pointer;font-family:inherit">Go to Deal →</button>
+    </div>
+  </div>
+</div>
 
 <!-- VENDOR MODAL -->
 <div class="modal-overlay" id="vendor-modal">
@@ -500,7 +552,7 @@ async function loadDealsFromCloud() {
     <div style="padding:6px 16px;font-size:10px;font-weight:600;color:var(--text3);letter-spacing:0.06em;text-transform:uppercase">Deals</div>
     <div class="sidebar-item" onclick="showPage('deals',this,'deals')">📋 All deals</div>
     <div class="sidebar-item" onclick="showPage('desk',this,'desk')">🖩 Desk a deal</div>
-    <div class="sidebar-item" onclick="openStartDeal()">💼 Start a deal</div>
+    <div class="sidebar-item" onclick="openStartDealModal()">💼 Start a deal</div>
     <div id="admin-nav-item" style="display:none;border-top:0.5px solid var(--border);margin:8px 0"></div>
     <div id="admin-nav-label" style="display:none;padding:6px 16px;font-size:10px;font-weight:600;color:var(--text3);letter-spacing:0.06em;text-transform:uppercase">Admin</div>
     <div id="admin-nav-btn" class="sidebar-item" style="display:none" onclick="showPage('admin',this,'admin')">🔒 Admin panel</div>
@@ -662,7 +714,7 @@ async function loadDealsFromCloud() {
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="11" width="22" height="10" rx="2"/><path d="M5 11V7a7 7 0 0114 0v4"/><circle cx="8" cy="16" r="1.5" fill="#fff" stroke="none"/><circle cx="16" cy="16" r="1.5" fill="#fff" stroke="none"/></svg>
           <div class="carfax-text">CAR<span>FAX</span>®</div>
         </button>
-        <button class="btn btn-deal" onclick="startDeal()">
+        <button class="btn btn-deal" onclick="openStartDealModal()">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
           Start a deal
         </button>
@@ -781,67 +833,62 @@ async function loadDealsFromCloud() {
           </div>
         </div>
 
-        <!-- CUSTOMER + PRICING SIDE BY SIDE -->
-        <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;align-items:start">
-
-          <!-- CUSTOMER -->
-          <div class="deal-card" style="margin:0">
-            <div class="deal-card-hdr">
-              <button class="deal-sec-btn" onclick="toggleDealSec('dc-customer','dc-customer-arr')"><span id="dc-customer-arr" style="font-size:10px;color:var(--text2)">▼</span> Customer info</button>
-              <div id="customer-preview" style="font-size:12px;color:var(--text2)">Not entered</div>
-            </div>
-            <div id="dc-customer" style="padding:16px">
-              <div class="form-grid" style="margin-bottom:10px">
-                <div class="form-field"><label>First name</label><input type="text" id="c-first" oninput="updateCustomerPreview()" /></div>
-                <div class="form-field"><label>Last name</label><input type="text" id="c-last" oninput="updateCustomerPreview()" /></div>
+        <!-- CUSTOMER + PRICING COMBINED CARD -->
+        <div class="deal-card">
+          <div class="deal-card-hdr">
+            <button class="deal-sec-btn" onclick="toggleDealSec('dc-customer','dc-customer-arr')"><span id="dc-customer-arr" style="font-size:10px;color:var(--text2)">▼</span> Customer info &amp; pricing</button>
+            <div id="customer-preview" style="font-size:12px;color:var(--text2)">Not entered</div>
+          </div>
+          <div id="dc-customer" style="padding:16px">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px">
+              <!-- LEFT: Customer -->
+              <div>
+                <div style="font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:10px">Customer</div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+                  <div class="form-field"><label>First name</label><input type="text" id="c-first" oninput="updateCustomerPreview()" /></div>
+                  <div class="form-field"><label>Last name</label><input type="text" id="c-last" oninput="updateCustomerPreview()" /></div>
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+                  <div class="form-field"><label>Phone</label><input type="tel" id="c-phone" /></div>
+                  <div class="form-field"><label>Email</label><input type="email" id="c-email" /></div>
+                </div>
+                <div style="margin-bottom:10px">
+                  <div class="form-field"><label>Date of birth</label><input type="date" id="c-dob" /></div>
+                </div>
+                <div style="margin-bottom:10px">
+                  <div class="form-field"><label>Address</label><input type="text" id="c-addr" placeholder="Start typing address..." autocomplete="off" /></div>
+                </div>
+                <div style="display:grid;grid-template-columns:2fr 1fr 1fr;gap:10px;margin-bottom:10px">
+                  <div class="form-field"><label>City</label><input type="text" id="c-city" /></div>
+                  <div class="form-field"><label>State</label><input type="text" id="c-state" /></div>
+                  <div class="form-field"><label>ZIP</label><input type="text" id="c-zip" /></div>
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+                  <div class="form-field"><label>Driver's license #</label><input type="text" id="c-dl" /></div>
+                  <div class="form-field"><label>License state</label><select id="c-dlstate"><option value="">Select...</option><option>CT</option><option>NY</option><option>NJ</option><option>MA</option><option>RI</option><option>PA</option><option>FL</option><option>Other</option></select></div>
+                </div>
               </div>
-              <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
-                <div class="form-field"><label>Phone</label><input type="tel" id="c-phone" /></div>
-                <div class="form-field"><label>Email</label><input type="email" id="c-email" /></div>
-              </div>
-              <div style="margin-bottom:10px">
-                <div class="form-field"><label>Date of birth</label><input type="date" id="c-dob" /></div>
-              </div>
-              <div style="margin-bottom:10px">
-                <div class="form-field"><label>Address</label><input type="text" id="c-addr" placeholder="Start typing address..." autocomplete="off" /></div>
-              </div>
-              <div style="display:grid;grid-template-columns:2fr 1fr 1fr;gap:10px;margin-bottom:10px">
-                <div class="form-field"><label>City</label><input type="text" id="c-city" /></div>
-                <div class="form-field"><label>State</label><input type="text" id="c-state" /></div>
-                <div class="form-field"><label>ZIP</label><input type="text" id="c-zip" /></div>
-              </div>
-              <div class="form-grid">
-                <div class="form-field"><label>Driver's license #</label><input type="text" id="c-dl" /></div>
-                <div class="form-field"><label>License state</label><select id="c-dlstate"><option value="">Select...</option><option>CT</option><option>NY</option><option>NJ</option><option>MA</option><option>RI</option><option>PA</option><option>FL</option><option>Other</option></select></div>
+              <!-- RIGHT: Pricing -->
+              <div>
+                <div style="font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:10px">Vehicle pricing <span id="pricing-preview" style="font-weight:600;color:var(--text);font-size:13px;text-transform:none">—</span></div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+                  <div class="form-field"><label>Selling price</label><div class="input-pre"><span>$</span><input type="number" id="p-sell" oninput="calcDeal()" /></div></div>
+                  <div class="form-field"><label>Doc fee</label><div class="input-pre"><span>$</span><input type="number" id="p-doc" value="599" oninput="calcDeal()" /></div></div>
+                </div>
+                <div style="margin-bottom:10px">
+                  <div class="form-field"><label>Dealer discount</label><div class="input-pre"><span>$</span><input type="number" id="p-discount" value="0" oninput="calcDeal()" /></div></div>
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+                  <div class="form-field"><label>Sales tax (%)</label><input type="number" id="p-tax" value="6.35" step="0.01" oninput="calcDeal()" /></div>
+                  <div class="form-field"><label>Registration</label><div class="input-pre"><span>$</span><input type="number" id="p-reg" value="180" oninput="calcDeal()" /></div></div>
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+                  <div class="form-field"><label>Emission</label><div class="input-pre"><span>$</span><input type="number" id="p-emission" value="20" oninput="calcDeal()" /></div></div>
+                  <div class="form-field"><label>VSI</label><div class="input-pre"><span>$</span><input type="number" id="p-vsi" value="0" oninput="calcDeal()" /></div></div>
+                </div>
               </div>
             </div>
           </div>
-
-          <!-- VEHICLE PRICING -->
-          <div class="deal-card" style="margin:0">
-            <div class="deal-card-hdr">
-              <button class="deal-sec-btn" onclick="toggleDealSec('dc-pricing','dc-pricing-arr')"><span id="dc-pricing-arr" style="font-size:10px;color:var(--text2)">▼</span> Vehicle pricing</button>
-              <div id="pricing-preview" style="font-size:13px;font-weight:600">—</div>
-            </div>
-            <div id="dc-pricing" style="padding:16px">
-              <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
-                <div class="form-field"><label>Selling price</label><div class="input-pre"><span>$</span><input type="number" id="p-sell" oninput="calcDeal()" /></div></div>
-                <div class="form-field"><label>Doc fee</label><div class="input-pre"><span>$</span><input type="number" id="p-doc" value="599" oninput="calcDeal()" /></div></div>
-              </div>
-              <div style="margin-bottom:10px">
-                <div class="form-field"><label>Dealer discount</label><div class="input-pre"><span>$</span><input type="number" id="p-discount" value="0" oninput="calcDeal()" /></div></div>
-              </div>
-              <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
-                <div class="form-field"><label>Sales tax (%)</label><input type="number" id="p-tax" value="6.35" step="0.01" oninput="calcDeal()" /></div>
-                <div class="form-field"><label>Registration</label><div class="input-pre"><span>$</span><input type="number" id="p-reg" value="180" oninput="calcDeal()" /></div></div>
-              </div>
-              <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-                <div class="form-field"><label>Emission</label><div class="input-pre"><span>$</span><input type="number" id="p-emission" value="20" oninput="calcDeal()" /></div></div>
-                <div class="form-field"><label>VSI</label><div class="input-pre"><span>$</span><input type="number" id="p-vsi" value="0" oninput="calcDeal()" /></div></div>
-              </div>
-            </div>
-          </div>
-
         </div>
 
         <!-- TRADE-IN -->
@@ -1935,6 +1982,125 @@ function startDesk(){
   }
   var sellEl=document.getElementById('dk-sell');if(sellEl)sellEl.value=v.price;
   setTimeout(function(){setDeskType(deskType);},50);
+}
+
+var newDealType='cash';
+
+function openStartDealModal(){
+  // Reset modal
+  document.getElementById('start-deal-step-1').style.display='block';
+  document.getElementById('start-deal-step-2').style.display='none';
+  document.getElementById('nd-first').value='';
+  document.getElementById('nd-last').value='';
+  document.getElementById('nd-phone').value='';
+  document.getElementById('nd-email').value='';
+  document.getElementById('nd-addr').value='';
+  document.getElementById('nd-city').value='';
+  document.getElementById('nd-state').value='';
+  document.getElementById('nd-zip').value='';
+  document.getElementById('nd-error').style.display='none';
+  ['dt-new-cash','dt-new-finance','dt-new-wholesale'].forEach(function(id){
+    document.getElementById(id).style.borderColor='var(--border)';
+    document.getElementById(id).style.background='var(--bg)';
+  });
+  document.getElementById('start-deal-modal').style.display='flex';
+  // Init address autocomplete for new deal modal
+  setTimeout(function(){
+    var input=document.getElementById('nd-addr');
+    if(input&&window.google&&!input._acInit){
+      input._acInit=true;
+      var ac=new google.maps.places.Autocomplete(input,{types:['address'],componentRestrictions:{country:'us'}});
+      ac.addListener('place_changed',function(){
+        var place=ac.getPlace();
+        if(!place.address_components)return;
+        var comps=place.address_components;
+        function get(type){var c=comps.find(function(x){return x.types.includes(type);});return c?c.long_name:'';}
+        function getShort(type){var c=comps.find(function(x){return x.types.includes(type);});return c?c.short_name:'';}
+        var num=get('street_number'),street=get('route');
+        var city=get('locality')||get('sublocality');
+        var state=getShort('administrative_area_level_1');
+        var zip=get('postal_code');
+        document.getElementById('nd-addr').value=(num+' '+street).trim();
+        document.getElementById('nd-city').value=city;
+        document.getElementById('nd-state').value=state;
+        document.getElementById('nd-zip').value=zip;
+        // Auto-set tax rate
+        if(zip){
+          fetch('/api/tax-lookup?address='+encodeURIComponent((num+' '+street).trim()+', '+city+', '+state+' '+zip))
+            .then(function(r){return r.json();})
+            .then(function(data){
+              if(data&&data.taxSummaries&&data.taxSummaries.length){
+                var rate=Math.round(data.taxSummaries[0].rate*10000)/100;
+                if(rate){document.getElementById('p-tax').value=rate;}
+              }
+            }).catch(function(){});
+        }
+      });
+    }
+  },300);
+}
+
+function closeStartDealModal(){
+  document.getElementById('start-deal-modal').style.display='none';
+}
+
+function selectDealTypeNew(type){
+  newDealType=type;
+  ['dt-new-cash','dt-new-finance','dt-new-wholesale'].forEach(function(id){
+    document.getElementById(id).style.borderColor='var(--border)';
+    document.getElementById(id).style.background='var(--bg)';
+  });
+  var btn=document.getElementById('dt-new-'+type);
+  btn.style.borderColor='#378ADD';
+  btn.style.background='rgba(55,138,221,0.08)';
+  // Go to step 2
+  setTimeout(function(){
+    document.getElementById('start-deal-step-1').style.display='none';
+    document.getElementById('start-deal-step-2').style.display='block';
+    var labels={'cash':'Cash','finance':'Finance','wholesale':'Wholesale'};
+    document.getElementById('new-deal-type-badge').textContent=labels[type];
+    document.getElementById('nd-first').focus();
+  },200);
+}
+
+function backToStep1(){
+  document.getElementById('start-deal-step-1').style.display='block';
+  document.getElementById('start-deal-step-2').style.display='none';
+}
+
+function goToDeal(){
+  var first=document.getElementById('nd-first').value.trim();
+  var last=document.getElementById('nd-last').value.trim();
+  if(!first&&!last){document.getElementById('nd-error').style.display='block';return;}
+  document.getElementById('nd-error').style.display='none';
+  closeStartDealModal();
+  // Open deal tab
+  showVdpTab('deal');
+  // Set deal type
+  setDealType(newDealType==='wholesale'?'cash':newDealType);
+  // Generate deal number
+  currentDealNum='D-'+new Date().getFullYear()+'-'+String(Math.floor(Math.random()*9000)+1000);
+  document.getElementById('deal-num').textContent=currentDealNum;
+  // Pre-fill customer info
+  setTimeout(function(){
+    function setVal(id,v){var el=document.getElementById(id);if(el)el.value=v;}
+    setVal('c-first',first);setVal('c-last',last);
+    setVal('c-phone',document.getElementById('nd-phone').value);
+    setVal('c-email',document.getElementById('nd-email').value);
+    setVal('c-addr',document.getElementById('nd-addr').value);
+    setVal('c-city',document.getElementById('nd-city').value);
+    setVal('c-state',document.getElementById('nd-state').value);
+    setVal('c-zip',document.getElementById('nd-zip').value);
+    updateCustomerPreview();
+    // Pre-fill selling price from vehicle
+    var v=inventory.find(function(x){return x.id===currentVehicleId;});
+    if(v){
+      setVal('p-sell',v.price);
+      var sc=document.getElementById('s-cost');if(sc)sc.textContent='$'+v.cost.toLocaleString();
+    }
+    calcDeal();
+    document.getElementById('vdp-deal').scrollIntoView({behavior:'smooth',block:'start'});
+  },150);
 }
 
 function startDeal(){
