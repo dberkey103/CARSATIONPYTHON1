@@ -5,7 +5,7 @@ import os
 import requests
 from functools import wraps
 
-app = Flask(__name__)
+app = Flask(__name__, template_folder='.')
 app.secret_key = os.environ.get('SECRET_KEY', 'autodms-secret-key-change-in-prod')
 CORS(app)
 
