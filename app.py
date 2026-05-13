@@ -6,6 +6,8 @@ import requests
 from functools import wraps
 
 app = Flask(__name__, template_folder='.')
+app.config['TEMPLATES_AUTO_RELOAD'] = True
+app.jinja_env.auto_reload = True
 app.secret_key = os.environ.get('SECRET_KEY', 'autodms-secret-key-change-in-prod')
 CORS(app)
 
