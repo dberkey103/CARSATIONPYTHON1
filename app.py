@@ -60,4 +60,166 @@ def get_inventory():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-@app.ro
+@app.route('/api/inventory', methods=['POST'])
+@login_required
+def add_vehicle():
+    data = request.json
+    try:
+        res = sb.table('inventory').insert(data).execute()
+        return jsonify(res.data[0])
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/inventory/<int:vehicle_id>', methods=['PUT'])
+@login_required
+def update_vehicle(vehicle_id):
+    data = request.json
+    try:
+        res = sb.table('inventory').update(data).eq('id', vehicle_id).execute()
+        return jsonify(res.data[0])
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/inventory/<int:vehicle_id>', methods=['DELETE'])
+@login_required
+def delete_vehicle(vehicle_id):
+    try:
+        sb.table('inventory').delete().eq('id', vehicle_id).execute()
+        return jsonify({'success': True})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/deals', methods=['GET'])
+@login_required
+def get_deals():
+    try:
+        res = sb.table('deals').select('*').order('created_at', desc=True).execute()
+        return jsonify(res.data)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/deals', methods=['POST'])
+@login_required
+def save_deal():
+    data = request.json
+    try:
+        res = sb.table('deals').upsert(data, on_conflict='deal_num').execute()
+        return jsonify(res.data[0])
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/deals/<deal_num>', methods=['PUT'])
+@login_required
+def update_deal(deal_num):
+    data = request.json
+    try:
+        res = sb.table('deals').update(data).eq('deal_num', deal_num).execute()
+        return jsonify(res.data[0])
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/deals/<deal_num>', methods=['DELETE'])
+@login_required
+def delete_deal(deal_num):
+    try:
+        sb.table('deals').delete().eq('deal_num', deal_num).execute()
+        return jsonify({'success': True})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/repair-orders', methods=['GET'])
+@login_required
+def get_ros():
+    try:
+        res = sb.table('repair_orders').select('*').order('created_at', desc=True).execute()
+        return jsonify(res.data)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/repair-orders', methods=['POST'])
+@login_required
+def save_ro():
+    data = request.json
+    try:
+        res = sb.table('repair_orders').upsert(data, on_conflict='ro_num').execute()
+        return jsonify(res.data[0])
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/users', methods=['GET'])
+@login_required
+def get_users():
+    try:
+        res = sb.table('users').select('id,first,last,username,role,active').execute()
+        return jsonify(res.data)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/users', methods=['POST'])
+@login_required
+def save_user():
+    data = request.json
+    try:
+        if data.get('id'):
+            res = sb.table('users').update(data).eq('id', data['id']).execute()
+        else:
+            res = sb.table('users').insert(data).execute()
+        return jsonify(res.data[0])
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/tax-lookup')
+@login_required
+def tax_lookup():
+    address = request.args.get('address', '')
+    if not address:
+        return jsonify({'error': 'No address provided'}), 400
+    try:
+        res = requests.get(
+            f'https://api.zip-tax.com/request/v60?address={address}',
+            headers={'X-API-KEY': ZIPTAX_KEY},
+            timeout=5
+        )
+        return jsonify(res.json())
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/vin/<vin>')
+@login_required
+def decode_vin(vin):
+    try:
+        carsxe_res = requests.get(
+            f'https://api.carsxe.com/specs?key={CARSXE_KEY}&vin={vin}',
+            timeout=5
+        )
+        carsxe_data = carsxe_res.json()
+        if carsxe_data.get('success') and carsxe_data.get('attributes'):
+            return jsonify({'source': 'carsxe', 'data': carsxe_data['attributes']})
+    except Exception as e:
+        print(f'CarsXE failed: {e}')
+    try:
+        res = requests.get(
+            f'https://vpic.nhtsa.dot.gov/api/vehicles/decodevin/{vin}?format=json',
+            timeout=5
+        )
+        return jsonify({'source': 'nhtsa', 'data': res.json()})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/')
+def index():
+    try:
+        with open(os.path.join(os.path.dirname(__file__), 'INDEX.html'), 'r') as f:
+            html = f.read()
+    except FileNotFoundError:
+        with open(os.path.join(os.path.dirname(__file__), 'index.html'), 'r') as f:
+            html = f.read()
+    html = html.replace('{{ google_key }}', GOOGLE_KEY)
+    return Response(html, mimetype='text/html', headers={
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0'
+    })
+
+if __name__ == '__main__':
+    app.run(debug=True, port=5000)
