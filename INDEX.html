@@ -2,6 +2,9 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>AutoDMS</title>
 <style>
@@ -237,54 +240,62 @@ async function loadDealsFromCloud() {
 </head>
 <body>
 
-<!-- START DEAL MODAL -->
-<div class="modal-overlay" id="start-deal-modal" style="display:none">
-  <div class="modal-box" style="max-width:480px;width:90%">
+<!-- START DEAL MODAL - Deal type selection only -->
+<div id="start-deal-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center">
+  <div style="background:var(--bg);border-radius:20px;padding:28px;width:380px;max-width:90vw;box-shadow:0 20px 60px rgba(0,0,0,0.2)">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
       <div style="font-size:16px;font-weight:600">Start a deal</div>
-      <button onclick="closeStartDealModal()" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--text2)">✕</button>
+      <button onclick="closeStartDealModal()" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--text2);line-height:1">✕</button>
     </div>
-    <div id="start-deal-step-1">
-      <div style="font-size:13px;color:var(--text2);margin-bottom:16px">Select deal type</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:24px">
-        <button onclick="selectDealTypeNew('cash')" style="padding:20px 10px;border-radius:var(--radius-lg);border:2px solid var(--border);background:var(--bg);cursor:pointer;font-family:inherit;transition:all 0.15s" id="dt-new-cash">
-          <div style="font-size:24px;margin-bottom:8px">💵</div>
-          <div style="font-size:13px;font-weight:600;color:var(--text)">Cash</div>
-        </button>
-        <button onclick="selectDealTypeNew('finance')" style="padding:20px 10px;border-radius:var(--radius-lg);border:2px solid var(--border);background:var(--bg);cursor:pointer;font-family:inherit;transition:all 0.15s" id="dt-new-finance">
-          <div style="font-size:24px;margin-bottom:8px">🏦</div>
-          <div style="font-size:13px;font-weight:600;color:var(--text)">Finance</div>
-        </button>
-        <button onclick="selectDealTypeNew('wholesale')" style="padding:20px 10px;border-radius:var(--radius-lg);border:2px solid var(--border);background:var(--bg);cursor:pointer;font-family:inherit;transition:all 0.15s" id="dt-new-wholesale">
-          <div style="font-size:24px;margin-bottom:8px">🤝</div>
-          <div style="font-size:13px;font-weight:600;color:var(--text)">Wholesale</div>
-        </button>
-      </div>
+    <div style="font-size:13px;color:var(--text2);margin-bottom:16px">Select deal type</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">
+      <button onclick="selectDealTypeNew('cash')" style="padding:20px 10px;border-radius:var(--radius-lg);border:2px solid var(--border);background:var(--bg);cursor:pointer;font-family:inherit;transition:all 0.15s" id="dt-new-cash">
+        <div style="font-size:28px;margin-bottom:8px">💵</div>
+        <div style="font-size:13px;font-weight:600;color:var(--text)">Cash</div>
+      </button>
+      <button onclick="selectDealTypeNew('finance')" style="padding:20px 10px;border-radius:var(--radius-lg);border:2px solid var(--border);background:var(--bg);cursor:pointer;font-family:inherit;transition:all 0.15s" id="dt-new-finance">
+        <div style="font-size:28px;margin-bottom:8px">🏦</div>
+        <div style="font-size:13px;font-weight:600;color:var(--text)">Finance</div>
+      </button>
+      <button onclick="selectDealTypeNew('wholesale')" style="padding:20px 10px;border-radius:var(--radius-lg);border:2px solid var(--border);background:var(--bg);cursor:pointer;font-family:inherit;transition:all 0.15s" id="dt-new-wholesale">
+        <div style="font-size:28px;margin-bottom:8px">🤝</div>
+        <div style="font-size:13px;font-weight:600;color:var(--text)">Wholesale</div>
+      </button>
     </div>
-    <div id="start-deal-step-2" style="display:none">
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px">
-        <button onclick="backToStep1()" style="background:none;border:none;cursor:pointer;color:var(--text2);font-size:13px;padding:0">← Back</button>
-        <div style="font-size:13px;color:var(--text2)">Customer information</div>
-        <span id="new-deal-type-badge" style="font-size:11px;font-weight:600;padding:2px 8px;border-radius:20px;background:var(--bg2);color:var(--text2)"></span>
-      </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+  </div>
+</div>
+
+<!-- CUSTOMER INFO FULL SCREEN -->
+<div id="new-deal-customer-screen" style="display:none;position:fixed;inset:0;background:var(--bg2);z-index:999;overflow-y:auto">
+  <div style="max-width:600px;margin:0 auto;padding:24px 16px">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:24px">
+      <button onclick="backToStep1()" style="background:none;border:none;cursor:pointer;color:var(--text2);font-size:14px;padding:0;display:flex;align-items:center;gap:4px">← Back</button>
+      <div style="font-size:18px;font-weight:600">Customer information</div>
+      <span id="new-deal-type-badge" style="font-size:12px;font-weight:600;padding:3px 10px;border-radius:20px;background:#1a1a1a;color:#fff"></span>
+    </div>
+    <div style="background:var(--bg);border-radius:var(--radius-lg);padding:20px;border:0.5px solid var(--border)">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
         <div class="form-field"><label>First name *</label><input type="text" id="nd-first" placeholder="First name" /></div>
         <div class="form-field"><label>Last name *</label><input type="text" id="nd-last" placeholder="Last name" /></div>
       </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
         <div class="form-field"><label>Phone</label><input type="tel" id="nd-phone" placeholder="(555) 555-5555" /></div>
         <div class="form-field"><label>Email</label><input type="email" id="nd-email" placeholder="email@example.com" /></div>
       </div>
-      <div style="margin-bottom:10px">
+      <div style="margin-bottom:12px">
         <div class="form-field"><label>Address</label><input type="text" id="nd-addr" placeholder="Start typing address..." autocomplete="off" /></div>
       </div>
-      <div style="display:grid;grid-template-columns:2fr 1fr 1fr;gap:10px;margin-bottom:20px">
+      <div style="display:grid;grid-template-columns:2fr 1fr 1fr;gap:12px;margin-bottom:12px">
         <div class="form-field"><label>City</label><input type="text" id="nd-city" /></div>
         <div class="form-field"><label>State</label><input type="text" id="nd-state" /></div>
         <div class="form-field"><label>ZIP</label><input type="text" id="nd-zip" /></div>
       </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px">
+        <div class="form-field"><label>Driver's license #</label><input type="text" id="nd-dl" /></div>
+        <div class="form-field"><label>Date of birth</label><input type="date" id="nd-dob" /></div>
+      </div>
       <div id="nd-error" style="display:none;color:var(--danger);font-size:12px;margin-bottom:10px">Please enter at least a first or last name.</div>
-      <button onclick="goToDeal()" style="width:100%;padding:12px;background:#378ADD;color:#fff;border:none;border-radius:var(--radius);font-size:14px;font-weight:600;cursor:pointer;font-family:inherit">Go to Deal →</button>
+      <button onclick="goToDeal()" style="width:100%;padding:14px;background:#378ADD;color:#fff;border:none;border-radius:var(--radius);font-size:15px;font-weight:600;cursor:pointer;font-family:inherit">Go to Deal →</button>
     </div>
   </div>
 </div>
@@ -1999,6 +2010,7 @@ function openStartDealModal(){
   document.getElementById('nd-state').value='';
   document.getElementById('nd-zip').value='';
   document.getElementById('nd-error').style.display='none';
+  document.getElementById('new-deal-customer-screen').style.display='none';
   ['dt-new-cash','dt-new-finance','dt-new-wholesale'].forEach(function(id){
     document.getElementById(id).style.borderColor='var(--border)';
     document.getElementById(id).style.background='var(--bg)';
@@ -2053,19 +2065,52 @@ function selectDealTypeNew(type){
   var btn=document.getElementById('dt-new-'+type);
   btn.style.borderColor='#378ADD';
   btn.style.background='rgba(55,138,221,0.08)';
-  // Go to step 2
+  // Close modal and show full screen customer info
   setTimeout(function(){
-    document.getElementById('start-deal-step-1').style.display='none';
-    document.getElementById('start-deal-step-2').style.display='block';
+    closeStartDealModal();
     var labels={'cash':'Cash','finance':'Finance','wholesale':'Wholesale'};
     document.getElementById('new-deal-type-badge').textContent=labels[type];
+    document.getElementById('new-deal-customer-screen').style.display='block';
     document.getElementById('nd-first').focus();
+    // Init address autocomplete
+    setTimeout(function(){
+      var input=document.getElementById('nd-addr');
+      if(input&&window.google&&!input._acInit){
+        input._acInit=true;
+        var ac=new google.maps.places.Autocomplete(input,{types:['address'],componentRestrictions:{country:'us'}});
+        ac.addListener('place_changed',function(){
+          var place=ac.getPlace();
+          if(!place.address_components)return;
+          var comps=place.address_components;
+          function get(type){var c=comps.find(function(x){return x.types.includes(type);});return c?c.long_name:'';}
+          function getShort(type){var c=comps.find(function(x){return x.types.includes(type);});return c?c.short_name:'';}
+          var num=get('street_number'),street=get('route');
+          var city=get('locality')||get('sublocality');
+          var state=getShort('administrative_area_level_1');
+          var zip=get('postal_code');
+          document.getElementById('nd-addr').value=(num+' '+street).trim();
+          document.getElementById('nd-city').value=city;
+          document.getElementById('nd-state').value=state;
+          document.getElementById('nd-zip').value=zip;
+          if(zip){
+            fetch('/api/tax-lookup?address='+encodeURIComponent((num+' '+street).trim()+', '+city+', '+state+' '+zip))
+              .then(function(r){return r.json();})
+              .then(function(data){
+                if(data&&data.taxSummaries&&data.taxSummaries.length){
+                  var rate=Math.round(data.taxSummaries[0].rate*10000)/100;
+                  if(rate){document.getElementById('p-tax').value=rate;}
+                }
+              }).catch(function(){});
+          }
+        });
+      }
+    },300);
   },200);
 }
 
 function backToStep1(){
-  document.getElementById('start-deal-step-1').style.display='block';
-  document.getElementById('start-deal-step-2').style.display='none';
+  document.getElementById('new-deal-customer-screen').style.display='none';
+  document.getElementById('start-deal-modal').style.display='flex';
 }
 
 function goToDeal(){
@@ -2073,7 +2118,7 @@ function goToDeal(){
   var last=document.getElementById('nd-last').value.trim();
   if(!first&&!last){document.getElementById('nd-error').style.display='block';return;}
   document.getElementById('nd-error').style.display='none';
-  closeStartDealModal();
+  document.getElementById('new-deal-customer-screen').style.display='none';
   // Open deal tab
   showVdpTab('deal');
   // Set deal type
